@@ -1,0 +1,21 @@
+# Connect IQ signing keys
+developer_key
+*.der
+*.pem
+
+# Build and export artifacts
+bin/
+*.prg
+*.iq
+*.debug.xml
+*.mir
+
+# Simulator and generated test data
+test-data/
+*.fit
+
+# Editor and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
