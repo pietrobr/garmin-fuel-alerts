@@ -4,9 +4,12 @@ import Toybox.Attention;
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.Math;
+import Toybox.System;
 import Toybox.WatchUi;
 
 class FuelAlertField extends WatchUi.DataField {
+
+    private const ALERT_DELAY_MILLISECONDS = 10000;
 
     private var _events as Array<FuelEvent>;
     private var _nextIndex as Number;
@@ -15,6 +18,7 @@ class FuelAlertField extends WatchUi.DataField {
     private var _alertActive as Boolean;
     private var _activeAlert as FuelAlertView or Null;
     private var _lastEventText as String or Null;
+    private var _delayAlerts as Boolean;
 
     public function initialize() {
         DataField.initialize();
@@ -26,6 +30,12 @@ class FuelAlertField extends WatchUi.DataField {
         _alertActive = false;
         _activeAlert = null;
         _lastEventText = null;
+        _delayAlerts = true;
+
+        var delayProperty = Application.Properties.getValue("delayAlerts");
+        if (delayProperty instanceof Boolean) {
+            _delayAlerts = delayProperty;
+        }
 
         var eventProperty = Application.Properties.getValue("events");
         if (eventProperty instanceof String && eventProperty.length() > 0) {
@@ -211,13 +221,27 @@ class FuelAlertField extends WatchUi.DataField {
     }
 
     private function isDue(event as FuelEvent) as Boolean {
+        var thresholdReached;
         if (event.isTime) {
-            return _timerMilliseconds != null
+            thresholdReached = _timerMilliseconds != null
                 && (_timerMilliseconds as Number) >= (event.threshold * 60000.0f);
+        } else {
+            thresholdReached = _distanceMeters != null
+                && (_distanceMeters as Float) >= (event.threshold * 1000.0f);
         }
 
-        return _distanceMeters != null
-            && (_distanceMeters as Float) >= (event.threshold * 1000.0f);
+        if (!thresholdReached || !_delayAlerts) {
+            return thresholdReached;
+        }
+
+        var now = System.getTimer();
+        if (event.reachedAtMilliseconds == null) {
+            event.reachedAtMilliseconds = now;
+            return false;
+        }
+
+        return now - (event.reachedAtMilliseconds as Number)
+            >= ALERT_DELAY_MILLISECONDS;
     }
 
     private function updateNextIndex() as Void {

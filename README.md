@@ -1,11 +1,12 @@
 # Fuel Alerts
 
-Fuel Alerts is a Garmin Connect IQ data field for the Forerunner 970. It helps
-runners follow a fueling and hydration plan by showing reminders based on
-elapsed distance or elapsed activity time.
+Fuel Alerts is a Garmin Connect IQ data field for supported Garmin Forerunner
+watches. It helps runners follow a fueling and hydration plan by showing
+reminders based on elapsed distance or elapsed activity time.
 
 When an event becomes due, the data field:
 
+- waits 10 seconds by default so the alert does not overlap an Auto Lap summary;
 - displays a full-screen `DataFieldAlert` over the current activity page;
 - triggers vibration when supported;
 - plays an alert tone when supported;
@@ -14,15 +15,19 @@ When an event becomes due, the data field:
 The normal data-field page shows the next event, the remaining distance or
 time, and the most recently triggered event.
 
-## Supported device
+## Supported devices
 
+- Garmin Forerunner 570, 42 mm
+- Garmin Forerunner 570, 47 mm
 - Garmin Forerunner 970
-- Round 454 x 454 display
 - Connect IQ API 3.2.0 or newer
 
 ## Event configuration
 
 The Connect IQ mobile app exposes one text setting named **Events**.
+It also exposes **Delay alerts by 10 seconds**, which is enabled by default.
+Disable it to trigger alerts immediately when their configured distance or
+time is reached.
 
 Example:
 
