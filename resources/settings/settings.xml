@@ -3,6 +3,9 @@
     <setting propertyKey="@Properties.events" title="@Strings.EventsTitle">
         <settingConfig type="alphaNumeric"/>
     </setting>
+    <setting propertyKey="@Properties.alertsEnabled" title="@Strings.AlertsEnabledTitle">
+        <settingConfig type="boolean"/>
+    </setting>
     <setting propertyKey="@Properties.delayAlerts" title="@Strings.DelayAlertsTitle">
         <settingConfig type="boolean"/>
     </setting>

@@ -10,6 +10,10 @@ import Toybox.WatchUi;
 class FuelAlertField extends WatchUi.DataField {
 
     private const ALERT_DELAY_MILLISECONDS = 10000;
+    private const MAIN_CONTENT_VERTICAL_OFFSET = 35;
+    private const PREVIOUS_EVENT_DIVIDER_GAP = 2;
+    private const PREVIOUS_EVENT_DIVIDER_MARGIN = 55;
+    private const PREVIOUS_EVENT_TOP = 20;
 
     private var _events as Array<FuelEvent>;
     private var _nextIndex as Number;
@@ -18,6 +22,7 @@ class FuelAlertField extends WatchUi.DataField {
     private var _alertActive as Boolean;
     private var _activeAlert as FuelAlertView or Null;
     private var _lastEventText as String or Null;
+    private var _alertsEnabled as Boolean;
     private var _delayAlerts as Boolean;
 
     public function initialize() {
@@ -30,7 +35,13 @@ class FuelAlertField extends WatchUi.DataField {
         _alertActive = false;
         _activeAlert = null;
         _lastEventText = null;
+        _alertsEnabled = true;
         _delayAlerts = true;
+
+        var alertsEnabledProperty = Application.Properties.getValue("alertsEnabled");
+        if (alertsEnabledProperty instanceof Boolean) {
+            _alertsEnabled = alertsEnabledProperty;
+        }
 
         var delayProperty = Application.Properties.getValue("delayAlerts");
         if (delayProperty instanceof Boolean) {
@@ -49,7 +60,7 @@ class FuelAlertField extends WatchUi.DataField {
         _distanceMeters = info.elapsedDistance;
         _timerMilliseconds = info.timerTime;
 
-        if (_alertActive) {
+        if (!_alertsEnabled || _alertActive) {
             return;
         }
 
@@ -101,6 +112,13 @@ class FuelAlertField extends WatchUi.DataField {
         var remainingHeight = dc.getFontHeight(Graphics.FONT_SMALL);
         var contentHeight = (lineHeight * lines.size()) + 10 + remainingHeight;
         var top = (dc.getHeight() - contentHeight) / 2;
+        if (_lastEventText != null) {
+            top += MAIN_CONTENT_VERTICAL_OFFSET;
+            var maxTop = dc.getHeight() - contentHeight;
+            if (top > maxTop) {
+                top = maxTop;
+            }
+        }
 
         for (var i = 0; i < lines.size(); i++) {
             dc.drawText(
@@ -162,38 +180,40 @@ class FuelAlertField extends WatchUi.DataField {
             return;
         }
 
-        var availableWidth = dc.getWidth() - 130;
         var text = _lastEventText as String;
-        var font = Graphics.FONT_SMALL;
-
-        if (dc.getTextWidthInPixels(text, font) > availableWidth) {
-            font = Graphics.FONT_TINY;
-            text = fitWithEllipsis(dc, text, font, availableWidth);
-        }
-
-        dc.drawText(
-            dc.getWidth() / 2,
-            22,
-            Graphics.FONT_XTINY,
-            "LAST",
-            Graphics.TEXT_JUSTIFY_CENTER
-        );
-        dc.drawText(
-            dc.getWidth() / 2,
-            66,
-            font,
+        var layout = FuelTextLayout.chooseTwoLines(
+            dc,
             text,
-            Graphics.TEXT_JUSTIFY_CENTER
+            dc.getWidth() - 80,
+            [
+                Graphics.FONT_SMALL,
+                Graphics.FONT_TINY,
+                Graphics.FONT_XTINY
+            ]
         );
-    }
+        var font = layout[:font];
+        var lines = layout[:lines] as Array<String>;
+        var lineHeight = dc.getFontHeight(font);
 
-    private function fitWithEllipsis(dc as Dc, text as String, font, width as Number) as String {
-        var shortened = text;
-        while (shortened.length() > 3
-            && dc.getTextWidthInPixels(shortened + "...", font) > width) {
-            shortened = shortened.substring(0, shortened.length() - 1);
+        for (var i = 0; i < lines.size(); i++) {
+            dc.drawText(
+                dc.getWidth() / 2,
+                PREVIOUS_EVENT_TOP + (i * lineHeight),
+                font,
+                lines[i],
+                Graphics.TEXT_JUSTIFY_CENTER
+            );
         }
-        return shortened + "...";
+
+        var dividerY = PREVIOUS_EVENT_TOP
+            + (lineHeight * lines.size())
+            + PREVIOUS_EVENT_DIVIDER_GAP;
+        dc.drawLine(
+            PREVIOUS_EVENT_DIVIDER_MARGIN,
+            dividerY,
+            dc.getWidth() - PREVIOUS_EVENT_DIVIDER_MARGIN,
+            dividerY
+        );
     }
 
     private function notifyRunner() as Void {

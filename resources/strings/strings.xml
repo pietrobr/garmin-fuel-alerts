@@ -2,5 +2,6 @@
 <strings>
     <string id="AppName">Fuel Alerts</string>
     <string id="EventsTitle">Events (km:text or T minutes:text)</string>
+    <string id="AlertsEnabledTitle">Enable alerts</string>
     <string id="DelayAlertsTitle">Delay alerts by 10 seconds</string>
 </strings>
