@@ -3,4 +3,5 @@
     <property id="events" type="string">0.2:Gel 100 + 125 ml PH + cps 250;0.5:Gel 160 + 125 ml PH + cps 250</property>
     <property id="alertsEnabled" type="boolean">true</property>
     <property id="delayAlerts" type="boolean">true</property>
+    <property id="vibrationCount" type="number">3</property>
 </properties>

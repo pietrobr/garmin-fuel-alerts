@@ -52,7 +52,7 @@ module FuelTextLayout {
         };
     }
 
-    function splitAtPlus(text as String) as Array<String> {
+    public function splitAtPlus(text as String) as Array<String> {
         var lines = [];
         var start = 0;
 

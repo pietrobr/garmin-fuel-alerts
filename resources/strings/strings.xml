@@ -4,4 +4,6 @@
     <string id="EventsTitle">Events (km:text or T minutes:text)</string>
     <string id="AlertsEnabledTitle">Enable alerts</string>
     <string id="DelayAlertsTitle">Delay alerts by 10 seconds</string>
+    <string id="VibrationCountTitle">Vibrations per alert</string>
+    <string id="VibrationCountError">Enter a number from 1 to 5</string>
 </strings>

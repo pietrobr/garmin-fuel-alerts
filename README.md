@@ -8,8 +8,9 @@ When an event becomes due, the data field:
 
 - waits 10 seconds by default so the alert does not overlap an Auto Lap summary;
 - displays a full-screen `DataFieldAlert` over the current activity page;
-- triggers vibration when supported;
-- plays an alert tone when supported;
+- triggers one configurable group of vibrations for the whole alert when supported;
+- plays one alert tone per configured display line when supported;
+- pauses between line tones so separate foods are distinguishable;
 - marks the event as completed so it only fires once.
 
 The normal data-field page shows the next event, the remaining distance or
@@ -33,6 +34,11 @@ keep the data field visible without showing, vibrating, or sounding alerts.
 **Delay alerts by 10 seconds** is also enabled by default.
 Disable it to trigger alerts immediately when their configured distance or
 time is reached.
+**Vibrations per alert** accepts a value from 1 to 5 and defaults to 3.
+The vibration group runs once to attract attention, regardless of how many
+display lines the alert contains.
+Garmin Forerunner devices use a fixed vibration strength, so the app does not
+offer an intensity setting that those watches would ignore.
 
 Example:
 
@@ -47,7 +53,8 @@ Rules:
 - `T35:TEXT` triggers after 35 elapsed activity minutes.
 - Separate events with semicolons.
 - Separate each threshold from its message with a colon.
-- Messages may contain spaces. A `+` starts a new display line.
+- Messages may contain spaces. A `+` starts a new display line and adds a
+  pause between that line's tone and the next one.
 - Invalid individual entries are ignored.
 
 Time values are expressed in minutes. Decimal values are supported, so

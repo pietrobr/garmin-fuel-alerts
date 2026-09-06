@@ -9,4 +9,11 @@
     <setting propertyKey="@Properties.delayAlerts" title="@Strings.DelayAlertsTitle">
         <settingConfig type="boolean"/>
     </setting>
+    <setting propertyKey="@Properties.vibrationCount" title="@Strings.VibrationCountTitle">
+        <settingConfig
+            type="numeric"
+            min="1"
+            max="5"
+            errorMessage="@Strings.VibrationCountError"/>
+    </setting>
 </settings>
