@@ -9,8 +9,7 @@ When an event becomes due, the data field:
 - waits 10 seconds by default so the alert does not overlap an Auto Lap summary;
 - displays a full-screen `DataFieldAlert` over the current activity page;
 - triggers one configurable group of vibrations for the whole alert when supported;
-- plays one alert tone per configured display line when supported;
-- pauses between line tones so separate foods are distinguishable;
+- plays the device's predefined loud alert tone when supported;
 - marks the event as completed so it only fires once.
 
 The normal data-field page shows the next event, the remaining distance or
@@ -31,6 +30,8 @@ time, and the most recently triggered event.
 The Connect IQ mobile app exposes one text setting named **Events**.
 It also exposes **Enable alerts**, which is enabled by default. Disable it to
 keep the data field visible without showing, vibrating, or sounding alerts.
+When alerts are disabled, the data-field page tells the user to enable them
+in the settings.
 **Delay alerts by 10 seconds** is also enabled by default.
 Disable it to trigger alerts immediately when their configured distance or
 time is reached.
@@ -53,8 +54,7 @@ Rules:
 - `T35:TEXT` triggers after 35 elapsed activity minutes.
 - Separate events with semicolons.
 - Separate each threshold from its message with a colon.
-- Messages may contain spaces. A `+` starts a new display line and adds a
-  pause between that line's tone and the next one.
+- Messages may contain spaces. A `+` starts a new display line.
 - Invalid individual entries are ignored.
 
 Time values are expressed in minutes. Decimal values are supported, so

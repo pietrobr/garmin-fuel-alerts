@@ -10,9 +10,7 @@ import Toybox.WatchUi;
 class FuelAlertField extends WatchUi.DataField {
 
     private const ALERT_DELAY_MILLISECONDS = 10000;
-    private const ALERT_LINE_PAUSE_MILLISECONDS = 600;
     private const ALERT_LINE_SIGNAL_MILLISECONDS = 220;
-    private const ALERT_TONE_FREQUENCY = 2500;
     private const DEFAULT_VIBRATION_COUNT = 3;
     private const VIBRATION_PAUSE_MILLISECONDS = 80;
     private const MAX_VIBRATIONS_PER_PROFILE = 4;
@@ -102,6 +100,11 @@ class FuelAlertField extends WatchUi.DataField {
         dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_BLACK);
         dc.clear();
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+
+        if (!_alertsEnabled) {
+            drawAlertsDisabled(dc);
+            return;
+        }
 
         drawLastEvent(dc);
         updateNextIndex();
@@ -195,7 +198,28 @@ class FuelAlertField extends WatchUi.DataField {
         event.fired = true;
         _lastEventText = event.text;
         updateNextIndex();
-        notifyRunner(event.text);
+        notifyRunner();
+    }
+
+    private function drawAlertsDisabled(dc as Dc) as Void {
+        var font = Graphics.FONT_SMALL;
+        var lineHeight = dc.getFontHeight(font);
+        var top = (dc.getHeight() - (lineHeight * 2)) / 2;
+
+        dc.drawText(
+            dc.getWidth() / 2,
+            top,
+            font,
+            "Alerts disabled",
+            Graphics.TEXT_JUSTIFY_CENTER
+        );
+        dc.drawText(
+            dc.getWidth() / 2,
+            top + lineHeight,
+            font,
+            "Enable in settings",
+            Graphics.TEXT_JUSTIFY_CENTER
+        );
     }
 
     private function drawLastEvent(dc as Dc) as Void {
@@ -239,36 +263,13 @@ class FuelAlertField extends WatchUi.DataField {
         );
     }
 
-    private function notifyRunner(text as String) as Void {
-        var lineCount = FuelTextLayout.splitAtPlus(text).size();
+    private function notifyRunner() as Void {
+        if (Attention has :playTone) {
+            Attention.playTone(Attention.TONE_LOUD_BEEP);
+        }
 
         if (Attention has :vibrate) {
             startVibrationSequence();
-        }
-
-        if (Attention has :playTone) {
-            if (Attention has :ToneProfile) {
-                var toneProfile = [];
-                for (var toneIndex = 0; toneIndex < lineCount; toneIndex++) {
-                    if (toneIndex > 0) {
-                        toneProfile.add(
-                            new Attention.ToneProfile(
-                                0,
-                                ALERT_LINE_PAUSE_MILLISECONDS
-                            )
-                        );
-                    }
-                    toneProfile.add(
-                        new Attention.ToneProfile(
-                            ALERT_TONE_FREQUENCY,
-                            ALERT_LINE_SIGNAL_MILLISECONDS
-                        )
-                    );
-                }
-                Attention.playTone({ :toneProfile => toneProfile });
-            } else {
-                Attention.playTone(Attention.TONE_ALERT_HI);
-            }
         }
     }
 
