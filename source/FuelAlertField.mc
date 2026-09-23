@@ -11,9 +11,11 @@ class FuelAlertField extends WatchUi.DataField {
 
     private const ALERT_DELAY_MILLISECONDS = 10000;
     private const ALERT_LINE_SIGNAL_MILLISECONDS = 220;
+    private const ALERT_TONE_WAIT_MILLISECONDS = 1000;
     private const DEFAULT_VIBRATION_COUNT = 3;
-    private const VIBRATION_PAUSE_MILLISECONDS = 80;
-    private const MAX_VIBRATIONS_PER_PROFILE = 4;
+    private const SIGNAL_IDLE = 0;
+    private const SIGNAL_WAITING_FOR_TONE = 1;
+    private const SIGNAL_WAITING_FOR_VIBRATION = 2;
     private const MAIN_CONTENT_VERTICAL_OFFSET = 35;
     private const PREVIOUS_EVENT_DIVIDER_GAP = 2;
     private const PREVIOUS_EVENT_DIVIDER_MARGIN = 55;
@@ -29,8 +31,9 @@ class FuelAlertField extends WatchUi.DataField {
     private var _alertsEnabled as Boolean;
     private var _delayAlerts as Boolean;
     private var _vibrationCount as Number;
-    private var _pendingVibrationCount as Number;
-    private var _vibrationResumeAtMilliseconds as Number or Null;
+    private var _remainingSignalCount as Number;
+    private var _signalState as Number;
+    private var _nextSignalAtMilliseconds as Number or Null;
 
     public function initialize() {
         DataField.initialize();
@@ -45,8 +48,9 @@ class FuelAlertField extends WatchUi.DataField {
         _alertsEnabled = true;
         _delayAlerts = true;
         _vibrationCount = DEFAULT_VIBRATION_COUNT;
-        _pendingVibrationCount = 0;
-        _vibrationResumeAtMilliseconds = null;
+        _remainingSignalCount = 0;
+        _signalState = SIGNAL_IDLE;
+        _nextSignalAtMilliseconds = null;
 
         var alertsEnabledProperty = Application.Properties.getValue("alertsEnabled");
         if (alertsEnabledProperty instanceof Boolean) {
@@ -77,7 +81,7 @@ class FuelAlertField extends WatchUi.DataField {
     public function compute(info as Activity.Info) as Void {
         _distanceMeters = info.elapsedDistance;
         _timerMilliseconds = info.timerTime;
-        continueVibrationSequence();
+        continueSignalSequence();
 
         if (!_alertsEnabled || _alertActive) {
             return;
@@ -264,69 +268,62 @@ class FuelAlertField extends WatchUi.DataField {
     }
 
     private function notifyRunner() as Void {
-        if (Attention has :playTone) {
-            Attention.playTone(Attention.TONE_LOUD_BEEP);
-        }
-
         if (Attention has :vibrate) {
             startVibrationSequence();
+        } else if (Attention has :playTone) {
+            Attention.playTone(Attention.TONE_LOUD_BEEP);
         }
     }
 
     private function startVibrationSequence() as Void {
         stopVibrationSequence();
+        _remainingSignalCount = _vibrationCount;
+        playNextVibration();
+    }
 
-        if (_vibrationCount <= MAX_VIBRATIONS_PER_PROFILE) {
-            playVibrationBatch(_vibrationCount);
+    private function playNextVibration() as Void {
+        if (_remainingSignalCount == 0 || !_alertActive) {
+            stopVibrationSequence();
             return;
         }
 
-        // Five pulses need nine profiles, but Garmin permits at most eight.
-        // Play three now and the final two on the next compute callback.
-        playVibrationBatch(3);
-        _pendingVibrationCount = _vibrationCount - 3;
-        _vibrationResumeAtMilliseconds = System.getTimer()
-            + (3 * ALERT_LINE_SIGNAL_MILLISECONDS)
-            + (2 * VIBRATION_PAUSE_MILLISECONDS);
+        Attention.vibrate([
+            new Attention.VibeProfile(100, ALERT_LINE_SIGNAL_MILLISECONDS)
+        ]);
+        _signalState = SIGNAL_WAITING_FOR_TONE;
+        _nextSignalAtMilliseconds = System.getTimer()
+            + ALERT_LINE_SIGNAL_MILLISECONDS;
     }
 
-    private function continueVibrationSequence() as Void {
-        if (_pendingVibrationCount == 0
-            || _vibrationResumeAtMilliseconds == null
-            || System.getTimer()
-                < (_vibrationResumeAtMilliseconds as Number)) {
+    private function continueSignalSequence() as Void {
+        if (_signalState == SIGNAL_IDLE
+            || _nextSignalAtMilliseconds == null
+            || System.getTimer() < (_nextSignalAtMilliseconds as Number)) {
             return;
         }
 
-        var count = _pendingVibrationCount;
-        stopVibrationSequence();
-        playVibrationBatch(count);
-    }
-
-    private function playVibrationBatch(count as Number) as Void {
-        var vibrationProfile = [];
-        for (var i = 0; i < count; i++) {
-            if (i > 0) {
-                vibrationProfile.add(
-                    new Attention.VibeProfile(
-                        0,
-                        VIBRATION_PAUSE_MILLISECONDS
-                    )
-                );
+        if (_signalState == SIGNAL_WAITING_FOR_TONE) {
+            if (Attention has :playTone) {
+                Attention.playTone(Attention.TONE_LOUD_BEEP);
+                _signalState = SIGNAL_WAITING_FOR_VIBRATION;
+                _nextSignalAtMilliseconds = System.getTimer()
+                    + ALERT_TONE_WAIT_MILLISECONDS;
+                return;
             }
-            vibrationProfile.add(
-                new Attention.VibeProfile(
-                    100,
-                    ALERT_LINE_SIGNAL_MILLISECONDS
-                )
-            );
+
+            _remainingSignalCount--;
+            playNextVibration();
+            return;
         }
-        Attention.vibrate(vibrationProfile);
+
+        _remainingSignalCount--;
+        playNextVibration();
     }
 
     private function stopVibrationSequence() as Void {
-        _pendingVibrationCount = 0;
-        _vibrationResumeAtMilliseconds = null;
+        _remainingSignalCount = 0;
+        _signalState = SIGNAL_IDLE;
+        _nextSignalAtMilliseconds = null;
     }
 
     private function findDueEvent() as Number {

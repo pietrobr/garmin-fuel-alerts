@@ -8,8 +8,7 @@ When an event becomes due, the data field:
 
 - waits 10 seconds by default so the alert does not overlap an Auto Lap summary;
 - displays a full-screen `DataFieldAlert` over the current activity page;
-- triggers one configurable group of vibrations for the whole alert when supported;
-- plays the device's predefined loud alert tone when supported;
+- alternates each configured vibration with a short alert tone when supported;
 - marks the event as completed so it only fires once.
 
 The normal data-field page shows the next event, the remaining distance or
@@ -36,8 +35,9 @@ in the settings.
 Disable it to trigger alerts immediately when their configured distance or
 time is reached.
 **Vibrations per alert** accepts a value from 1 to 5 and defaults to 3.
-The vibration group runs once to attract attention, regardless of how many
-display lines the alert contains.
+Each vibration is followed by a short tone; the next vibration starts only
+after that tone ends. The sequence runs once for the whole alert, regardless
+of how many display lines the alert contains.
 Garmin Forerunner devices use a fixed vibration strength, so the app does not
 offer an intensity setting that those watches would ignore.
 
@@ -91,6 +91,18 @@ the Garmin system.
 
 In the simulator, use **Simulation > Data Fields > Timeout Alert** when an
 alert does not close automatically.
+
+### Simulator sound and vibration
+
+The Connect IQ Simulator represents vibration visually; it does not produce
+physical vibration. Depending on the SDK version, selected device profile,
+and host audio configuration, it may show the vibration while producing no
+audible alert tone even when **Settings > Tones** is enabled.
+
+Fuel Alerts intentionally uses Garmin's predefined `TONE_LOUD_BEEP`.
+Custom `ToneProfile` sequences are not used because they are not reproduced
+reliably by the simulator or all supported devices. Confirm the final sound
+and vibration behavior on a physical watch.
 
 ## Build
 
